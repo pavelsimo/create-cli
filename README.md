@@ -3,7 +3,13 @@
 ![CI](https://github.com/pavelsimo/create-cli/actions/workflows/ci.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A skill for agents that scaffolds production-ready Go CLI projects with a single command. Generates a complete project: Cobra command tree, Makefile, CI/CD workflows, golangci-lint, lefthook git hooks, a custom Node.js docs site for GitHub Pages, goreleaser multi-platform releases, and a Homebrew tap dispatch — all wired together and ready to push.
+A skill for agents that scaffolds production-ready CLI projects from language templates. Invoke `/create-cli`, pick a template, and get a complete project pushed to GitHub.
+
+**Available templates:**
+
+| Template | Language | Stack |
+|---|---|---|
+| `go` | Go | Cobra, Makefile, golangci-lint, goreleaser, Homebrew tap, Node.js docs site |
 
 ## Usage
 
@@ -13,7 +19,7 @@ A skill for agents that scaffolds production-ready Go CLI projects with a single
 
 The skill asks for a name and description, shows you a CLI design spec to review, then generates the full project on GitHub.
 
-## What Gets Created
+## What Gets Created (go template)
 
 | File / Directory | Purpose |
 |---|---|
@@ -37,9 +43,9 @@ The skill asks for a name and description, shows you a CLI design spec to review
 | `{{TOOL_NAME}}` | _(required)_ | CLI name, lowercase hyphenated |
 | `{{GITHUB_USER}}` | detected via `gh api user` | GitHub username or org |
 | `{{DESCRIPTION}}` | _(required)_ | One-sentence purpose |
-| `{{MODULE_PATH}}` | `github.com/{user}/{name}` | Go module path |
 | `{{HOMEBREW_TAP}}` | `{user}/homebrew-tap` | Homebrew tap repo |
 | `{{YEAR}}` | current year | Used in LICENSE |
+| `{{MODULE_PATH}}` | `github.com/{user}/{name}` | Go module path _(go template only)_ |
 
 ## Installation
 

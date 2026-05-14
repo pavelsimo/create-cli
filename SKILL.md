@@ -1,16 +1,17 @@
 ---
 name: create-cli
-description: "Scaffold a production-ready Go CLI: Cobra, Makefile, CI/CD, linter, git hooks, GitHub Pages, goreleaser + Homebrew tap."
+description: "Scaffold production-ready CLI projects from language templates. Currently: go (Cobra, CI/CD, goreleaser, GitHub Pages)."
 trigger: /create-cli
 ---
 
 # Create CLI
 
-Scaffold a complete Go CLI project from a built-in template, applying CLI design conventions from clig.dev.
+Scaffold a complete CLI project from a language template, applying CLI design conventions from clig.dev.
+Currently available template: `go`.
 
 ## Do This First
 
-Read `templates/go/` in this skill's directory to understand the exact files that get generated.
+Read `templates/` in this skill's directory to understand available templates and the files each generates.
 Apply the CLI design rubric from [clig.dev](https://clig.dev/) to every interface decision.
 
 ## Step 1 — Clarify
@@ -18,11 +19,13 @@ Apply the CLI design rubric from [clig.dev](https://clig.dev/) to every interfac
 Ask only for what cannot be inferred. Proceed with best-guess defaults if the user is unsure:
 
 1. **name** — CLI tool name (lowercase, hyphenated; e.g. `my-tool`)
-2. **description** — one-sentence purpose (e.g. "search and sync files across storage backends")
-3. **github_user** — detect with `gh api user --jq .login`; confirm with user
-4. **homebrew_tap** — Homebrew tap repo (default: `{github_user}/homebrew-tap`)
+2. **template** — language template to use (default: `go`)
+   - `go` — Cobra, Makefile, golangci-lint, goreleaser, Homebrew tap, Node.js docs site
+3. **description** — one-sentence purpose (e.g. "search and sync files across storage backends")
+4. **github_user** — detect with `gh api user --jq .login`; confirm with user
+5. **homebrew_tap** — Homebrew tap repo (default: `{github_user}/homebrew-tap`)
 
-Do not ask for the module path — always derive it as `github.com/{github_user}/{name}`.
+Go template only: derive `module_path` as `github.com/{github_user}/{name}` — do not ask.
 
 ## Step 2 — Design
 
@@ -60,8 +63,9 @@ gh repo create {github_user}/{name} \
   --clone
 cd {name}
 
-# 2. Copy and customize templates/go/* (variable substitution below)
+# 2. Copy templates/{template}/* with variable substitution (see table below)
 
+# — go template only —
 # 3. Initialize Go module
 go mod init github.com/{github_user}/{name}
 go get github.com/spf13/cobra@latest
@@ -70,10 +74,11 @@ go mod tidy
 # 4. Install lefthook and activate git hooks
 go install github.com/evilmartians/lefthook@latest
 lefthook install
+# — end go template steps —
 
 # 5. Initial commit
 git add .
-git commit -m "🎉 init: scaffold {name}"
+git commit -m "🎉 init {name}"
 git push -u origin main
 
 # 6. Disable wiki, ensure issues are enabled
@@ -94,9 +99,9 @@ When copying from `templates/go/`, replace every occurrence of:
 | `{{TOOL_NAME}}` | CLI name (e.g. `my-tool`) |
 | `{{GITHUB_USER}}` | GitHub username/org |
 | `{{DESCRIPTION}}` | One-sentence description |
-| `{{MODULE_PATH}}` | `github.com/{github_user}/{name}` |
 | `{{HOMEBREW_TAP}}` | Homebrew tap repo (e.g. `pavelsimo/homebrew-tap`) |
 | `{{YEAR}}` | Current 4-digit year |
+| `{{MODULE_PATH}}` | `github.com/{github_user}/{name}` **(go template only)** |
 
 After substitution, rename every `*.tmpl` file by stripping the `.tmpl` extension.
 
@@ -109,10 +114,10 @@ ln -s AGENTS.md CLAUDE.md
 
 ```
 ✅ Created:    https://github.com/{github_user}/{name}
-📦 Module:     github.com/{github_user}/{name}
+📦 Module:     github.com/{github_user}/{name}  (go template)
 📄 Docs:       https://{github_user}.github.io/{name}  (deploys after first docs/ push)
 
-Generated:
+Generated (go template):
   cmd/root.go          ← root Cobra command, global flags
   cmd/version.go       ← --version subcommand
   Makefile             ← build / test / lint / fmt / docs / ci / release targets
@@ -142,4 +147,4 @@ Next steps:
 - Flag names are lowercase hyphenated (never camelCase)
 - Short flags only for the most-used: `-v` verbose, `-q` quiet, `-n` dry-run, `-f` force, `-o` output
 - `--read-only` / `READONLY=1` env as safety mode for agent use
-- Shell completions via `cobra` built-ins (`{name} completion bash|zsh|fish|powershell`)
+- Shell completions via `cobra` built-ins (`{name} completion bash|zsh|fish|powershell`) (go template)
