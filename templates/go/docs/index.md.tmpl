@@ -1,6 +1,7 @@
-# {{TOOL_NAME}}
-
-{{DESCRIPTION}}
+---
+title: {{TOOL_NAME}}
+description: {{DESCRIPTION}}
+---
 
 ## Installation
 
@@ -20,6 +21,7 @@ go install {{MODULE_PATH}}@latest
 ### Download binary
 
 Download the latest release from the [GitHub Releases](https://github.com/{{GITHUB_USER}}/{{TOOL_NAME}}/releases) page.
+Pre-built binaries are available for macOS (amd64/arm64), Linux (amd64/arm64), and Windows (amd64).
 
 ## Quick Start
 
@@ -30,7 +32,10 @@ Download the latest release from the [GitHub Releases](https://github.com/{{GITH
 # Show version
 {{TOOL_NAME}} version
 
-# Dry-run a command
+# JSON output (machine-readable)
+{{TOOL_NAME}} <subcommand> --json
+
+# Preview changes without applying them
 {{TOOL_NAME}} <subcommand> --dry-run
 ```
 
@@ -38,17 +43,25 @@ Download the latest release from the [GitHub Releases](https://github.com/{{GITH
 
 | Command | Description |
 |---------|-------------|
-| `{{TOOL_NAME}} version` | Print version |
+| `{{TOOL_NAME}} version` | Print version and exit |
+| `{{TOOL_NAME}} completion` | Generate shell completion script |
 
-## Configuration
+## Global Flags
 
-| Flag | Env | Default | Description |
-|------|-----|---------|-------------|
-| `--verbose` / `-v` | — | `false` | Verbose output |
-| `--quiet` / `-q` | — | `false` | Suppress non-essential output |
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--help` | `-h` | — | Show help |
+| `--verbose` | `-v` | `false` | Verbose output |
+| `--quiet` | `-q` | `false` | Suppress non-essential output |
 | `--json` | — | `false` | Output as JSON |
-| `--no-color` | `NO_COLOR` | `false` | Disable color output |
-| `--dry-run` / `-n` | — | `false` | Preview changes without applying |
+| `--no-color` | — | `false` | Disable color output |
+| `--dry-run` | `-n` | `false` | Preview changes without applying them |
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `NO_COLOR` | Set to any value to disable color output |
 
 ## Exit Codes
 
@@ -57,3 +70,16 @@ Download the latest release from the [GitHub Releases](https://github.com/{{GITH
 | `0` | Success |
 | `1` | Runtime failure |
 | `2` | Invalid usage |
+
+## Shell Completions
+
+```bash
+# bash
+{{TOOL_NAME}} completion bash > /etc/bash_completion.d/{{TOOL_NAME}}
+
+# zsh
+{{TOOL_NAME}} completion zsh > "${fpath[1]}/_{{TOOL_NAME}}"
+
+# fish
+{{TOOL_NAME}} completion fish > ~/.config/fish/completions/{{TOOL_NAME}}.fish
+```
