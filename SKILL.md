@@ -118,6 +118,7 @@ ln -s AGENTS.md CLAUDE.md
 📄 Docs:       https://{github_user}.github.io/{name}  (deploys after first docs/ push)
 
 Generated (go template):
+  README.md            ← GitHub landing page (installation, quick start, commands)
   cmd/root.go          ← root Cobra command, global flags
   cmd/version.go       ← --version subcommand
   Makefile             ← build / test / lint / fmt / docs / ci / release targets
