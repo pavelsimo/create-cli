@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+
+      - name: Lint Markdown
+        run: |
+          markdownlint SKILL.md README.md CHANGELOG.md \
+            --config .markdownlint.json || true
+
+      - name: Validate SKILL.md frontmatter
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+          with open("SKILL.md") as f:
+              content = f.read()
+          assert content.startswith("---"), "SKILL.md must start with YAML frontmatter"
+          end = content.index("---", 3)
+          fm = content[3:end]
+          assert "name:" in fm, "frontmatter must contain 'name:'"
+          assert "description:" in fm, "frontmatter must contain 'description:'"
+          assert "trigger:" in fm, "frontmatter must contain 'trigger:'"
+          print("SKILL.md frontmatter OK")
+          EOF
+
+      - name: Validate template variables
+        run: |
+          python3 - <<'EOF'
+          import os, sys
+          required_vars = ["{{TOOL_NAME}}", "{{GITHUB_USER}}", "{{DESCRIPTION}}", "{{MODULE_PATH}}", "{{HOMEBREW_TAP}}"]
+          errors = []
+          for root, dirs, files in os.walk("templates/go"):
+              for fname in files:
+                  path = os.path.join(root, fname)
+                  try:
+                      text = open(path).read()
+                  except Exception:
+                      continue
+                  for var in required_vars:
+                      if var in text:
+                          break
+          # Verify key template files exist
+          required_files = [
+              "templates/go/main.go.tmpl",
+              "templates/go/cmd/root.go.tmpl",
+              "templates/go/cmd/version.go.tmpl",
+              "templates/go/Makefile",
+              "templates/go/go.mod.tmpl",
+              "templates/go/.golangci.yml",
+              "templates/go/.goreleaser.yaml.tmpl",
+              "templates/go/.lefthook.yml",
+              "templates/go/AGENTS.md.tmpl",
+              "templates/go/.github/workflows/ci.yml",
+              "templates/go/.github/workflows/release.yml",
+              "templates/go/.github/workflows/pages.yml",
+              "templates/go/scripts/build-docs-site.mjs",
+          ]
+          for f in required_files:
+              if not os.path.exists(f):
+                  errors.append(f"missing: {f}")
+          if errors:
+              print("Errors:\n" + "\n".join(errors))
+              sys.exit(1)
+          print(f"All {len(required_files)} required template files present")
+          EOF

@@ -1,0 +1,59 @@
+# {{TOOL_NAME}}
+
+{{DESCRIPTION}}
+
+## Installation
+
+### Homebrew (macOS / Linux)
+
+```bash
+brew tap {{HOMEBREW_TAP}}
+brew install {{TOOL_NAME}}
+```
+
+### Go install
+
+```bash
+go install {{MODULE_PATH}}@latest
+```
+
+### Download binary
+
+Download the latest release from the [GitHub Releases](https://github.com/{{GITHUB_USER}}/{{TOOL_NAME}}/releases) page.
+
+## Quick Start
+
+```bash
+# Show help
+{{TOOL_NAME}} --help
+
+# Show version
+{{TOOL_NAME}} version
+
+# Dry-run a command
+{{TOOL_NAME}} <subcommand> --dry-run
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `{{TOOL_NAME}} version` | Print version |
+
+## Configuration
+
+| Flag | Env | Default | Description |
+|------|-----|---------|-------------|
+| `--verbose` / `-v` | — | `false` | Verbose output |
+| `--quiet` / `-q` | — | `false` | Suppress non-essential output |
+| `--json` | — | `false` | Output as JSON |
+| `--no-color` | `NO_COLOR` | `false` | Disable color output |
+| `--dry-run` / `-n` | — | `false` | Preview changes without applying |
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Runtime failure |
+| `2` | Invalid usage |

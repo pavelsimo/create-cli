@@ -1,0 +1,63 @@
+# Agent Instructions — {{TOOL_NAME}}
+
+This file is the single canonical source of agent instructions for this repository.
+`CLAUDE.md` is a symlink to this file. Do not create separate `CLAUDE.md` or `CODEX.md` variants.
+
+## Project Structure
+
+```
+{{TOOL_NAME}}/
+├── cmd/                  # Cobra commands (one file per subcommand)
+│   ├── root.go           # Root command, global flags
+│   └── version.go        # version subcommand
+├── internal/             # Private business logic (not importable externally)
+├── docs/                 # Markdown documentation source
+├── scripts/              # Build tooling (docs site builder, etc.)
+├── .github/workflows/    # CI, release, and pages workflows
+├── Makefile              # All developer tasks
+├── .golangci.yml         # Linter configuration
+├── .goreleaser.yaml      # Release configuration
+└── .lefthook.yml         # Git hook configuration
+```
+
+## Build / Test / Dev Commands
+
+```bash
+make build        # compile binary to bin/{{TOOL_NAME}}
+make test         # run tests with coverage
+make lint         # run golangci-lint
+make fmt          # format code (gofumpt + goimports)
+make fmt-check    # CI-safe format check (exits non-zero if dirty)
+make ci           # full gate: fmt-check + lint + test + build
+make docs         # build documentation site to dist/docs-site/
+make tools        # install all development tools
+```
+
+## Coding Style
+
+- All errors returned from `RunE` are printed to stderr; do not use `fmt.Println` for errors
+- Primary data to stdout; diagnostics, progress, and errors to stderr
+- `SilenceUsage: true` on every `cobra.Command` with a `RunE` — never dump usage on runtime errors
+- Flag names are lowercase hyphenated (never camelCase)
+- Define output structs early; human-readable tables are a rendering layer on top of them
+- Respect `NO_COLOR` env and `--no-color` flag everywhere color is used
+- Prompts only when `os.Stdin` is a TTY; `--no-input` disables all prompts
+- Use `--dry-run` / `-n` before any state-changing operation
+
+## Testing Guidelines
+
+- Table-driven tests in `_test.go` files adjacent to the code under test
+- Integration tests in `internal/…_test.go` tagged with `//go:build integration`
+- Run unit tests only: `go test ./... -short`
+- Run integration tests: `go test ./... -tags integration`
+- Aim for ≥ 70% coverage on `internal/`
+
+## Commit & PR Guidelines
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+`feat | fix | docs | refactor | test | chore | ci | build | style | perf`
+
+PR description must include:
+- What changed and why
+- How it was tested
+- Any new flags or breaking changes
