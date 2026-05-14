@@ -114,7 +114,7 @@ Go project structure patterns extracted from [openclaw/gogcli](https://github.co
 
 ## Contributing
 
-Open an issue or pull request. Keep commits atomic and follow [Conventional Commits](https://www.conventionalcommits.org/).
+Open an issue or pull request. Keep commits atomic and follow the [/commit skill](https://github.com/pavelsimo/commit) convention.
 
 ## License
 
