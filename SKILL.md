@@ -143,9 +143,3 @@ Next steps:
 - Short flags only for the most-used: `-v` verbose, `-q` quiet, `-n` dry-run, `-f` force, `-o` output
 - `--read-only` / `READONLY=1` env as safety mode for agent use
 - Shell completions via `cobra` built-ins (`{name} completion bash|zsh|fish|powershell`)
-
-## Attribution
-
-CLI design rubric adapted from [steipete/agent-scripts](https://github.com/steipete/agent-scripts/tree/main/skills/create-cli) by [@steipete](https://github.com/steipete).
-CLI guidelines: [clig.dev](https://clig.dev/) by Aanand Prasad, Ben Firshman, Carl Tashian, Eva Parish.
-Go project patterns from [openclaw/gogcli](https://github.com/openclaw/gogcli).

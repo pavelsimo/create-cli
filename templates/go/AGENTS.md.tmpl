@@ -54,8 +54,15 @@ make tools        # install all development tools
 
 ## Commit & PR Guidelines
 
-Use [Conventional Commits](https://www.conventionalcommits.org/):
-`feat | fix | docs | refactor | test | chore | ci | build | style | perf`
+Commits follow the [/commit skill](https://github.com/pavelsimo/commit) convention:
+`<emoji> <lowercase imperative summary>`
+
+The emoji carries the type signal — no `feat:` or `fix:` prefix. Body (after a blank line)
+explains *why*, not how. No trailing period. All lowercase.
+
+Common emoji:
+- ✨ new feature · 🐛 bug fix · ♻️ refactor · 📝 docs
+- 👷 CI/CD · 🔧 config · ⬆️ dependency bump · 🔥 remove code
 
 PR description must include:
 - What changed and why
