@@ -88,6 +88,11 @@ gh repo edit --enable-wiki=false
 gh api repos/{github_user}/{name}/pages \
   -X POST \
   -f build_type=workflow 2>/dev/null || true
+
+# 8. Set HOMEBREW_TAP_TOKEN so the release workflow can publish to the Homebrew tap
+gh secret set HOMEBREW_TAP_TOKEN \
+  --repo {github_user}/{name} \
+  --body "$(gh auth token)"
 ```
 
 ### Template variable substitution
@@ -135,7 +140,6 @@ Generated (go template):
 Next steps:
   • Add subcommands in cmd/ (each in its own file)
   • Fill in business logic in internal/
-  • Set HOMEBREW_TAP_TOKEN secret in repo settings (Settings → Secrets) for Homebrew releases
   • Push a v0.1.0 tag to trigger the first release: git tag v0.1.0 && git push --tags
 ```
 

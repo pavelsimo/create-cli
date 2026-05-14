@@ -19,24 +19,24 @@ linters:
     - prealloc
     - unparam
     - whitespace
-
-linters-settings:
-  gocyclo:
-    min-complexity: 50
-  goconst:
-    min-len: 3
-    min-occurrences: 3
-  revive:
+  settings:
+    gocyclo:
+      min-complexity: 50
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    revive:
+      rules:
+        - name: exported
+          arguments:
+            - disableStutteringCheck
+  exclusions:
     rules:
-      - name: exported
-        arguments:
-          - disableStutteringCheck
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
 
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gosec
-        - errcheck
   max-issues-per-linter: 0
   max-same-issues: 0
