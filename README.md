@@ -1,4 +1,4 @@
-# create-cli
+# create-cli skill
 
 ![CI](https://github.com/pavelsimo/create-cli/actions/workflows/ci.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
