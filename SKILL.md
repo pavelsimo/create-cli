@@ -149,3 +149,4 @@ Next steps:
 - Short flags only for the most-used: `-v` verbose, `-q` quiet, `-n` dry-run, `-f` force, `-o` output
 - `--read-only` / `READONLY=1` env as safety mode for agent use
 - Shell completions via `cobra` built-ins (`{name} completion bash|zsh|fish|powershell`) (go template)
+- README badges: `flat-square` style, `logoColor=white`, branded hex colors; order: release → license MIT → Go → Homebrew → DeepWiki; **no CI/coverage badges**

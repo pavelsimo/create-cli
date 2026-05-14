@@ -4,7 +4,7 @@ BUILD_DIR := bin
 VERSION   ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS   := -ldflags "-X $(MODULE)/cmd.Version=$(VERSION)"
 
-GOLANGCI_LINT_VERSION := v1.64.8
+GOLANGCI_LINT_VERSION := v2.12.2
 GOFUMPT_VERSION       := v0.7.0
 GOIMPORTS_VERSION     := v0.29.0
 
@@ -12,7 +12,7 @@ GOIMPORTS_VERSION     := v0.29.0
 
 build: ## Build binary to bin/
 	@mkdir -p $(BUILD_DIR)
-	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY) ./...
+	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY) .
 
 install: ## Install binary to $GOPATH/bin
 	go install $(LDFLAGS) ./...
@@ -48,7 +48,7 @@ clean: ## Remove build artifacts
 tools: ## Install development tools
 	go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION)
 	go install golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION)
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 	go install github.com/evilmartians/lefthook@latest
 	go install github.com/goreleaser/goreleaser@latest
 
