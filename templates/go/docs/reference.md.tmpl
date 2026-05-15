@@ -1,0 +1,42 @@
+---
+title: Reference
+description: Global flags, environment variables, exit codes, and shell completions
+---
+
+## Global flags
+
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--help` | `-h` | — | Show help for the current command |
+| `--verbose` | `-v` | `false` | Enable verbose output |
+| `--quiet` | `-q` | `false` | Suppress non-essential output |
+| `--json` | — | `false` | Output results as JSON |
+| `--no-color` | — | `false` | Disable ANSI color output |
+| `--dry-run` | `-n` | `false` | Preview changes without applying them |
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `NO_COLOR` | Set to any non-empty value to disable color output |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Runtime failure |
+| `2` | Invalid usage |
+
+## Shell completions
+
+```bash
+# bash
+{{TOOL_NAME}} completion bash > /etc/bash_completion.d/{{TOOL_NAME}}
+
+# zsh
+{{TOOL_NAME}} completion zsh > "${fpath[1]}/_{{TOOL_NAME}}"
+
+# fish
+{{TOOL_NAME}} completion fish > ~/.config/fish/completions/{{TOOL_NAME}}.fish
+```

@@ -24,6 +24,11 @@ Ask only for what cannot be inferred. Proceed with best-guess defaults if the us
 3. **description** — one-sentence purpose (e.g. "search and sync files across storage backends")
 4. **github_user** — detect with `gh api user --jq .login`; confirm with user
 5. **homebrew_tap** — Homebrew tap repo (default: `{github_user}/homebrew-tap`)
+6. **color_scheme** — documentation color theme (default: `teal`)
+   - `teal` — teal/cyan accent, near-black background (modern, default)
+   - `ocean` — blue accent, dark navy background (familiar, developer-friendly)
+   - `purple` — violet accent, deep purple background (creative, distinctive)
+   - `amber` — gold accent, warm dark background (warm, unique)
 
 Go template only: derive `module_path` as `github.com/{github_user}/{name}` — do not ask.
 
@@ -107,6 +112,7 @@ When copying from `templates/go/`, replace every occurrence of:
 | `{{HOMEBREW_TAP}}` | Homebrew tap repo (e.g. `pavelsimo/homebrew-tap`) |
 | `{{YEAR}}` | Current 4-digit year |
 | `{{MODULE_PATH}}` | `github.com/{github_user}/{name}` **(go template only)** |
+| `{{COLOR_SCHEME}}` | Docs color theme: `teal`, `ocean`, `purple`, or `amber` |
 
 After substitution, rename every `*.tmpl` file by stripping the `.tmpl` extension.
 
@@ -131,8 +137,11 @@ Generated (go template):
   .goreleaser.yaml     ← multi-platform builds + Homebrew tap dispatch
   .lefthook.yml        ← pre-commit: fmt-check + lint
   AGENTS.md            ← canonical agent instructions; CLAUDE.md symlinks here
-  docs/index.md        ← project docs landing page
-  scripts/build-docs-site.mjs  ← pure Node.js SSG, no deps
+  docs/index.md        ← docs landing page
+  docs/install.md      ← installation instructions (Homebrew, go install, binary)
+  docs/quickstart.md   ← common patterns in 60 seconds
+  docs/reference.md    ← global flags, env vars, exit codes, completions
+  scripts/build-docs-site.mjs  ← pure Node.js SSG, no deps (color theme: {color_scheme})
   .github/workflows/ci.yml     ← fmt-check + lint + test on every push/PR
   .github/workflows/release.yml ← goreleaser + Homebrew tap on tag push
   .github/workflows/pages.yml  ← docs site deploy on docs/ changes

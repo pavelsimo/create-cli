@@ -3,83 +3,16 @@ title: {{TOOL_NAME}}
 description: {{DESCRIPTION}}
 ---
 
-## Installation
+{{TOOL_NAME}} is a zero-config CLI tool. {{DESCRIPTION}}.
 
-### Homebrew (macOS / Linux)
+## Why {{TOOL_NAME}}
 
-```bash
-brew tap {{HOMEBREW_TAP}}
-brew install {{TOOL_NAME}}
-```
+- **Fast** — no setup, just install and run
+- **Scriptable** — every command supports `--json` for pipeline use
+- **Safe** — `--dry-run` previews changes before applying them
 
-### Go install
+## Quick links
 
-```bash
-go install {{MODULE_PATH}}@latest
-```
-
-### Download binary
-
-Download the latest release from the [GitHub Releases](https://github.com/{{GITHUB_USER}}/{{TOOL_NAME}}/releases) page.
-Pre-built binaries are available for macOS (amd64/arm64), Linux (amd64/arm64), and Windows (amd64).
-
-## Quick Start
-
-```bash
-# Show help
-{{TOOL_NAME}} --help
-
-# Show version
-{{TOOL_NAME}} version
-
-# JSON output (machine-readable)
-{{TOOL_NAME}} <subcommand> --json
-
-# Preview changes without applying them
-{{TOOL_NAME}} <subcommand> --dry-run
-```
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `{{TOOL_NAME}} version` | Print version and exit |
-| `{{TOOL_NAME}} completion` | Generate shell completion script |
-
-## Global Flags
-
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `--help` | `-h` | — | Show help |
-| `--verbose` | `-v` | `false` | Verbose output |
-| `--quiet` | `-q` | `false` | Suppress non-essential output |
-| `--json` | — | `false` | Output as JSON |
-| `--no-color` | — | `false` | Disable color output |
-| `--dry-run` | `-n` | `false` | Preview changes without applying them |
-
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `NO_COLOR` | Set to any value to disable color output |
-
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | Success |
-| `1` | Runtime failure |
-| `2` | Invalid usage |
-
-## Shell Completions
-
-```bash
-# bash
-{{TOOL_NAME}} completion bash > /etc/bash_completion.d/{{TOOL_NAME}}
-
-# zsh
-{{TOOL_NAME}} completion zsh > "${fpath[1]}/_{{TOOL_NAME}}"
-
-# fish
-{{TOOL_NAME}} completion fish > ~/.config/fish/completions/{{TOOL_NAME}}.fish
-```
+- [Install](install.html) — Homebrew, `go install`, or prebuilt binary
+- [Quick Start](quickstart.html) — common patterns in 60 seconds
+- [Reference](reference.html) — global flags, env vars, exit codes, completions

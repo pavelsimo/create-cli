@@ -5,24 +5,24 @@
  * Pure Node.js — zero external dependencies.
  * Reads docs/*.md → outputs a polished static site to dist/docs-site/
  *
- * Features: sidebar nav, sticky ToC, dark/light toggle, syntax highlighting,
- * copy buttons, hero on index page, llms.txt, .nojekyll, CNAME support.
- *
- * Inspired by the openclaw/gogcli docs site pattern.
+ * Features: sidebar nav (with sections), sticky ToC, dark/light toggle,
+ * syntax highlighting, copy buttons, hero on index page, color themes,
+ * llms.txt, .nojekyll, CNAME support.
  */
 
 import {
-  readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync,
+  readFileSync, writeFileSync, mkdirSync, existsSync,
 } from "fs";
-import { join, basename, extname } from "path";
+import { join, basename } from "path";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const TOOL      = "{{TOOL_NAME}}";
-const REPO_URL  = "https://github.com/{{GITHUB_USER}}/{{TOOL_NAME}}";
-const BREW_TAP  = "{{HOMEBREW_TAP}}";
-const DESC      = "{{DESCRIPTION}}";
-const SITE_BASE = existsSync("docs/CNAME")
+const TOOL         = "{{TOOL_NAME}}";
+const REPO_URL     = "https://github.com/{{GITHUB_USER}}/{{TOOL_NAME}}";
+const BREW_TAP     = "{{HOMEBREW_TAP}}";
+const DESC         = "{{DESCRIPTION}}";
+const COLOR_SCHEME = "{{COLOR_SCHEME}}"; // teal | ocean | purple | amber
+const SITE_BASE    = existsSync("docs/CNAME")
   ? `https://${readFileSync("docs/CNAME","utf8").trim()}`
   : `https://{{GITHUB_USER}}.github.io/{{TOOL_NAME}}`;
 
@@ -30,13 +30,69 @@ const SRC = "docs";
 const OUT = join("dist", "docs-site");
 mkdirSync(OUT, { recursive: true });
 
+// ── Color themes ──────────────────────────────────────────────────────────────
+
+const THEMES = {
+  teal: {
+    dark:  { accent:"#2dd4bf", accentSoft:"rgba(45,212,191,.16)", accentStrong:"#5eead4",
+             bg:"#0a0e16", paper:"#141a26", surface2:"#1a212d", line:"#232a38", lineSoft:"#1a212d",
+             ink:"#f1f5f9", text:"#cbd2dc", muted:"#8d96a4", codeBg:"#04080f" },
+    light: { accent:"#0f766e", accentSoft:"rgba(15,118,110,.10)", accentStrong:"#0d5b55",
+             bg:"#fafbfc", paper:"#ffffff", surface2:"#eef1f5", line:"#e3e7ec", lineSoft:"#eef1f5",
+             ink:"#0f172a", text:"#1f2937", muted:"#5b6470", codeBg:"#0a1322" },
+  },
+  ocean: {
+    dark:  { accent:"#60a5fa", accentSoft:"rgba(96,165,250,.16)", accentStrong:"#93c5fd",
+             bg:"#0c1220", paper:"#111827", surface2:"#1e293b", line:"#1e293b", lineSoft:"#172033",
+             ink:"#f1f5f9", text:"#cbd5e1", muted:"#64748b", codeBg:"#060c18" },
+    light: { accent:"#2563eb", accentSoft:"rgba(37,99,235,.10)", accentStrong:"#1d4ed8",
+             bg:"#f8fafc", paper:"#ffffff", surface2:"#eff6ff", line:"#e2e8f0", lineSoft:"#eff6ff",
+             ink:"#0f172a", text:"#1e293b", muted:"#64748b", codeBg:"#0a1220" },
+  },
+  purple: {
+    dark:  { accent:"#a78bfa", accentSoft:"rgba(167,139,250,.16)", accentStrong:"#c4b5fd",
+             bg:"#0d0b1a", paper:"#160f28", surface2:"#1e1535", line:"#2a1f45", lineSoft:"#1e1535",
+             ink:"#f5f3ff", text:"#ddd6fe", muted:"#8b7ec8", codeBg:"#07050f" },
+    light: { accent:"#7c3aed", accentSoft:"rgba(124,58,237,.10)", accentStrong:"#6d28d9",
+             bg:"#faf8ff", paper:"#ffffff", surface2:"#f3f0ff", line:"#e9e3ff", lineSoft:"#f3f0ff",
+             ink:"#1e0a3c", text:"#2d1b69", muted:"#6b7280", codeBg:"#0d0b1a" },
+  },
+  amber: {
+    dark:  { accent:"#fbbf24", accentSoft:"rgba(251,191,36,.14)", accentStrong:"#fcd34d",
+             bg:"#0f0c05", paper:"#1c1608", surface2:"#2a1f08", line:"#3a2c0a", lineSoft:"#2a1f08",
+             ink:"#fffbeb", text:"#fde68a", muted:"#a16207", codeBg:"#080600" },
+    light: { accent:"#d97706", accentSoft:"rgba(217,119,6,.10)", accentStrong:"#b45309",
+             bg:"#fffbf0", paper:"#ffffff", surface2:"#fef3c7", line:"#fde68a", lineSoft:"#fef3c7",
+             ink:"#451a03", text:"#92400e", muted:"#78350f", codeBg:"#0f0c05" },
+  },
+};
+
+const theme = THEMES[COLOR_SCHEME] || THEMES.teal;
+
+function themeCss(t) {
+  const d = t.dark, l = t.light;
+  return `[data-theme=dark]{
+  --bg:${d.bg};--paper:${d.paper};--surface2:${d.surface2};
+  --line:${d.line};--line-soft:${d.lineSoft};
+  --ink:${d.ink};--text:${d.text};--muted:${d.muted};
+  --accent:${d.accent};--accent-soft:${d.accentSoft};--accent-strong:${d.accentStrong};
+  --code-bg:${d.codeBg};--code-fg:#e6edf3;--code-border:#1f2937;
+}
+[data-theme=light]{
+  --bg:${l.bg};--paper:${l.paper};--surface2:${l.surface2};
+  --line:${l.line};--line-soft:${l.lineSoft};
+  --ink:${l.ink};--text:${l.text};--muted:${l.muted};
+  --accent:${l.accent};--accent-soft:${l.accentSoft};--accent-strong:${l.accentStrong};
+  --code-bg:${l.codeBg};--code-fg:#e6edf3;--code-border:#1f2937;
+}`;
+}
+
 // ── Markdown parser ───────────────────────────────────────────────────────────
 
 function esc(s) {
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-/** Stash tokens to prevent double-processing during inline pass. */
 function stash(s, buf) { const k=`\x00${buf.length}\x00`; buf.push(s); return k; }
 function unstash(s, buf) { return s.replace(/\x00(\d+)\x00/g,(_,i)=>buf[+i]); }
 
@@ -110,14 +166,12 @@ function slugify(t) {
   return t.toLowerCase().replace(/[^\w\s-]/g,"").trim().replace(/\s+/g,"-");
 }
 
-/** Parse markdown source, return { html, toc: [{level,id,text}] } */
 function parse(src) {
   const lines = src.split("\n");
   const buf=[], toc=[], out=[];
   let i=0, inPara=false, inUl=false, inOl=false, inFence=false;
   let fLang="", fLines=[];
 
-  // strip frontmatter
   if (lines[0]==="---") {
     i=1; while(i<lines.length&&lines[i]!=="---") i++; i++;
   }
@@ -130,15 +184,13 @@ function parse(src) {
   for(;i<lines.length;i++) {
     const line=lines[i];
 
-    // fenced code
     if(line.startsWith("```")) {
       if(!inFence) {
         flushBlock();
         inFence=true; fLang=line.slice(3).trim(); fLines=[];
       } else {
         const body=highlight(fLang,fLines.join("\n"));
-        const label=fLang?`<span class="code-lang">${fLang}</span>`:"";
-        out.push(`<div class="code-wrap">${label}<pre><code>${body}</code></pre>`+
+        out.push(`<div class="code-wrap"><pre><code>${body}</code></pre>`+
           `<button class="copy-btn">Copy</button></div>`);
         inFence=false; fLines=[];
       }
@@ -146,7 +198,6 @@ function parse(src) {
     }
     if(inFence){fLines.push(line);continue;}
 
-    // heading
     const hm=line.match(/^(#{1,4})\s+(.*)/);
     if(hm) {
       flushBlock();
@@ -158,7 +209,6 @@ function parse(src) {
       continue;
     }
 
-    // blockquote
     if(line.startsWith(">")) {
       flushBlock();
       const text=unstash(inline(line.slice(1).trim(),buf),buf);
@@ -166,17 +216,15 @@ function parse(src) {
       continue;
     }
 
-    // horizontal rule
     if(line.match(/^-{3,}$/)){flushBlock();out.push("<hr>");continue;}
 
-    // table — collect all pipe-starting lines
     if(line.startsWith("|")) {
       flushBlock();
       const rows=[line];
       while(i+1<lines.length&&lines[i+1].startsWith("|")) rows.push(lines[++i]);
       out.push('<table>');
       rows.forEach((row,ri)=>{
-        if(row.match(/^\|[-| :]+\|$/)) return; // separator
+        if(row.match(/^\|[-| :]+\|$/)) return;
         const cells=row.split("|").slice(1,-1);
         const tag=ri===0?"th":"td";
         out.push("<tr>"+cells.map(c=>`<${tag}>${unstash(inline(c.trim(),buf),buf)}</${tag}>`).join("")+"</tr>");
@@ -185,7 +233,6 @@ function parse(src) {
       continue;
     }
 
-    // unordered list
     if(line.match(/^[-*]\s/)) {
       flushPara(); flushOl();
       if(!inUl){out.push("<ul>");inUl=true;}
@@ -193,7 +240,6 @@ function parse(src) {
       continue;
     }
 
-    // ordered list
     if(line.match(/^\d+\.\s/)) {
       flushPara(); flushUl();
       if(!inOl){out.push("<ol>");inOl=true;}
@@ -201,10 +247,8 @@ function parse(src) {
       continue;
     }
 
-    // blank
     if(line.trim()===""){flushBlock();continue;}
 
-    // paragraph
     flushUl();flushOl();
     if(!inPara){out.push("<p>");inPara=true;} else out.push(" ");
     out.push(unstash(inline(line,buf),buf));
@@ -227,19 +271,42 @@ function tocHtml(toc) {
 }
 
 function sidebarHtml(pages, currentSlug) {
-  const links=pages.map(({slug,label})=>
-    `<li><a href="${slug}.html"${slug===currentSlug?' class="active"':""}>${label}</a></li>`
-  ).join("\n");
+  const slugSection = {};
+  for (const [sectionLabel, files] of sections) {
+    for (const f of files) slugSection[basename(f, ".md")] = sectionLabel;
+  }
+
+  let items = "", lastSection = null;
+  for (const { slug, label } of pages) {
+    const sec = slugSection[slug];
+    if (sec !== lastSection) {
+      items += `<li class="nav-group"><h2>${esc(sec)}</h2></li>\n`;
+      lastSection = sec;
+    }
+    const active = slug === currentSlug ? ' class="active"' : "";
+    items += `<li><a href="${slug}.html"${active}>${esc(label)}</a></li>\n`;
+  }
+
   return `<nav class="sidebar" id="sidebar" aria-label="Site navigation">
   <div class="sidebar-brand">
-    <a href="index.html" class="brand-link">${TOOL}</a>
+    <a href="index.html" class="brand-link">
+      <span class="brand-mark">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/><path d="M8 6.5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 018 6.5zM8 5a1 1 0 100-2 1 1 0 000 2z"/></svg>
+      </span>
+      ${TOOL}
+    </a>
   </div>
-  <ul class="sidebar-nav">${links}</ul>
+  <ul class="sidebar-nav">${items}</ul>
   <div class="sidebar-footer">
     <a href="${REPO_URL}" target="_blank" rel="noopener" class="gh-link">
       <svg height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
     </a>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+      <span class="icon-sun">☀️</span>
+      <span class="icon-moon">🌙</span>
+      <span id="themeLabel">Light</span>
+    </button>
   </div>
 </nav>`;
 }
@@ -250,7 +317,7 @@ function heroHtml() {
   <h1 class="hero-title">${TOOL}</h1>
   <p class="hero-desc">${esc(DESC)}</p>
   <div class="hero-actions">
-    <a class="btn-primary" href="#installation">Get started</a>
+    <a class="btn-primary" href="install.html">Get started</a>
     <a class="btn-outline" href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a>
   </div>
   <div class="install-cmd">
@@ -281,221 +348,292 @@ function renderPage({slug, title, bodyHtml, toc, pages, isIndex}) {
 <meta property="og:description" content="${esc(DESC)}">
 <meta property="og:url" content="${SITE_BASE}/${slug === "index" ? "" : slug + ".html"}">
 <meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ── Reset + tokens ─────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --sidebar-w:240px;--toc-w:210px;
-  --font-sans:system-ui,-apple-system,"Segoe UI",sans-serif;
-  --font-mono:"JetBrains Mono","Fira Code","SF Mono",monospace;
+  --sidebar-w:280px;
+  --font-sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",ui-monospace,monospace;
 }
-[data-theme=dark]{
-  --bg:#0d1117;--surface:#161b22;--surface2:#1f2937;
-  --border:#21262d;--text:#e6edf3;--muted:#7d8590;
-  --accent:#58a6ff;--accent2:#3fb950;--accent3:#f78166;
-  --code-bg:#161b22;--hl-bg:#1f2937;
-}
-[data-theme=light]{
-  --bg:#ffffff;--surface:#f6f8fa;--surface2:#eaecef;
-  --border:#d0d7de;--text:#1f2328;--muted:#656d76;
-  --accent:#0969da;--accent2:#1a7f37;--accent3:#cf222e;
-  --code-bg:#f6f8fa;--hl-bg:#eaecef;
-}
+${themeCss(theme)}
 
 /* ── Base ───────────────────────────────────────────── */
 html{scroll-behavior:smooth;font-size:16px}
-body{background:var(--bg);color:var(--text);font:1rem/1.75 var(--font-sans);min-height:100vh;display:flex;flex-direction:column}
+body{
+  background:var(--bg);color:var(--text);
+  font:1rem/1.65 var(--font-sans);min-height:100vh;
+  transition:background-color .18s,color .18s;
+}
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 img{max-width:100%}
-hr{border:none;border-top:1px solid var(--border);margin:2rem 0}
+hr{border:none;border-top:1px solid var(--line);margin:2rem 0}
 
-/* ── Top nav ────────────────────────────────────────── */
-.topnav{
-  position:sticky;top:0;z-index:100;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  padding:.6rem 1.25rem;
-  display:flex;align-items:center;gap:1rem;
-  height:56px;
+/* ── Shell grid ─────────────────────────────────────── */
+.shell{
+  display:grid;
+  grid-template-columns:var(--sidebar-w) minmax(0,1fr);
+  min-height:100vh;
 }
-.topnav .hamburger{display:none;background:none;border:none;cursor:pointer;color:var(--muted);padding:.25rem}
-.topnav .hamburger svg{display:block}
-.topnav .nav-brand{font-weight:700;font-size:1rem;color:var(--text);white-space:nowrap}
-.topnav .nav-brand span{color:var(--accent)}
-.topnav .spacer{flex:1}
-.topnav .nav-link{color:var(--muted);font-size:.875rem;white-space:nowrap}
-.topnav .nav-link:hover{color:var(--text);text-decoration:none}
-.topnav .theme-btn{
-  background:none;border:1px solid var(--border);border-radius:6px;
-  cursor:pointer;padding:.3rem .55rem;color:var(--muted);font-size:.8rem;
-  display:flex;align-items:center;gap:.35rem;white-space:nowrap;
-}
-.topnav .theme-btn:hover{color:var(--text);border-color:var(--accent)}
-.icon-sun,.icon-moon{display:none}
-[data-theme=dark]  .icon-moon{display:inline}
-[data-theme=light] .icon-sun{display:inline}
-
-/* ── Layout ─────────────────────────────────────────── */
-.layout{display:flex;flex:1;max-width:1280px;margin:0 auto;width:100%;padding:0 1rem}
 
 /* ── Sidebar ────────────────────────────────────────── */
 .sidebar{
-  width:var(--sidebar-w);flex-shrink:0;
-  position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;
-  padding:1.5rem .75rem 2rem;
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;gap:1rem;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:var(--paper);border-right:1px solid var(--line);
+  padding:24px 22px;
+  display:flex;flex-direction:column;
+  scrollbar-width:thin;scrollbar-color:var(--line) transparent;
 }
-.sidebar-brand .brand-link{font-weight:700;font-size:1rem;color:var(--text)}
-.sidebar-brand .brand-link:hover{color:var(--accent);text-decoration:none}
-.sidebar-nav{list-style:none;display:flex;flex-direction:column;gap:.15rem;margin-top:.5rem}
-.sidebar-nav a{
-  display:block;padding:.35rem .75rem;border-radius:6px;
-  color:var(--muted);font-size:.875rem;transition:background .12s,color .12s;
-}
-.sidebar-nav a:hover{background:var(--surface2);color:var(--text);text-decoration:none}
-.sidebar-nav a.active{background:var(--surface2);color:var(--accent);font-weight:600}
-.sidebar-footer{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)}
-.gh-link{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted)}
-.gh-link:hover{color:var(--text);text-decoration:none}
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
 
-/* ── Main content ───────────────────────────────────── */
-.main{flex:1;min-width:0;padding:2rem 2.5rem 4rem}
+/* brand */
+.sidebar-brand{margin-bottom:1.25rem}
+.brand-link{
+  display:flex;align-items:center;gap:10px;
+  font-weight:700;font-size:1.05rem;color:var(--ink);
+}
+.brand-link:hover{color:var(--accent);text-decoration:none}
+.brand-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.brand-mark svg{fill:#fff}
+[data-theme=dark] .brand-mark svg{fill:#0a0e16}
+
+/* sidebar nav */
+.sidebar-nav{list-style:none;flex:1}
+.nav-group h2{
+  font-size:.68rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);margin:1.25rem 0 .3rem;padding:0 10px;
+}
+.nav-group:first-child h2{margin-top:.25rem}
+.sidebar-nav a{
+  display:block;padding:5px 10px;margin:1px 0;
+  border-radius:6px;font-size:.9rem;line-height:1.4;
+  color:var(--text);transition:background .12s,color .12s;
+}
+.sidebar-nav a:hover{background:var(--line-soft);color:var(--ink);text-decoration:none}
+.sidebar-nav a.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+/* sidebar footer */
+.sidebar-footer{
+  margin-top:auto;padding-top:1rem;
+  border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:.75rem;
+}
+.gh-link{
+  display:flex;align-items:center;gap:.4rem;
+  font-size:.8rem;color:var(--muted);flex:1;
+}
+.gh-link:hover{color:var(--text);text-decoration:none}
+.theme-btn{
+  background:none;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;padding:.3rem .5rem;color:var(--muted);font-size:.75rem;
+  display:flex;align-items:center;gap:.3rem;white-space:nowrap;
+  font-family:var(--font-sans);
+  transition:border-color .15s,color .15s;
+}
+.theme-btn:hover{color:var(--ink);border-color:var(--accent)}
+.icon-sun,.icon-moon{font-size:.85rem}
+[data-theme=dark]  .icon-moon{display:inline}[data-theme=dark]  .icon-sun{display:none}
+[data-theme=light] .icon-sun{display:inline}[data-theme=light] .icon-moon{display:none}
+
+/* ── Body column ────────────────────────────────────── */
+.body-col{display:flex;flex-direction:column;min-width:0}
+
+/* mobile bar — hidden on desktop */
+.mob-bar{
+  display:none;
+  position:sticky;top:0;z-index:100;
+  background:var(--paper);border-bottom:1px solid var(--line);
+  padding:.6rem 1rem;align-items:center;gap:.75rem;height:52px;
+}
+.mob-brand{font-weight:700;font-size:.95rem;color:var(--ink);flex:1}
+.mob-brand:hover{color:var(--accent);text-decoration:none}
+.hamburger{
+  background:none;border:none;cursor:pointer;
+  color:var(--muted);padding:.25rem;display:flex;
+}
+
+/* ── Main + ToC row ─────────────────────────────────── */
+.content-row{display:flex;flex:1;min-width:0}
+.main{
+  flex:1;min-width:0;
+  padding:32px clamp(20px,4.5vw,56px) 80px;
+}
 
 /* ── ToC ────────────────────────────────────────────── */
 .toc{
-  width:var(--toc-w);flex-shrink:0;
-  position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;
-  padding:1.5rem .5rem 2rem;font-size:.825rem;
+  width:210px;flex-shrink:0;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding:32px 24px 32px 14px;
+  border-left:1px solid var(--line);
+  font-size:.84rem;
 }
-.toc-title{font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:.7rem;margin-bottom:.75rem;padding:0 .5rem}
-.toc ul{list-style:none;display:flex;flex-direction:column;gap:.1rem}
-.toc-2 a{padding:.25rem .5rem;display:block;border-radius:4px;color:var(--muted);transition:color .12s}
-.toc-3 a{padding:.2rem .5rem .2rem 1.25rem;display:block;border-radius:4px;color:var(--muted);font-size:.8rem;transition:color .12s}
-.toc a:hover,.toc a.active{color:var(--accent);text-decoration:none}
+.toc-title{
+  font-size:.68rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem;
+}
+.toc ul{list-style:none}
+.toc a{
+  display:block;padding:4px 0 4px 10px;
+  border-left:2px solid transparent;margin-left:-12px;
+  color:var(--muted);transition:color .12s,border-color .12s;
+}
+.toc a:hover,.toc a.active{
+  color:var(--accent);border-left-color:var(--accent);text-decoration:none;
+}
+.toc-3 a{padding-left:22px;font-size:.8rem}
 
 /* ── Hero ───────────────────────────────────────────── */
-.hero{padding:3rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:2.5rem}
-.hero-eyebrow{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:.75rem}
-.hero-title{font-size:clamp(2rem,4vw,2.75rem);font-weight:800;letter-spacing:-.04em;line-height:1.15;margin-bottom:.75rem}
-.hero-desc{font-size:1.05rem;color:var(--muted);max-width:540px;margin-bottom:1.75rem;line-height:1.6}
-.hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.75rem}
-.btn-primary{background:var(--accent);color:#0d1117;font-weight:600;padding:.5rem 1.25rem;border-radius:6px;font-size:.9rem;transition:opacity .15s}
-.btn-primary:hover{opacity:.85;text-decoration:none}
-.btn-outline{border:1px solid var(--border);color:var(--text);padding:.5rem 1.25rem;border-radius:6px;font-size:.9rem;transition:border-color .15s}
-.btn-outline:hover{border-color:var(--accent);text-decoration:none}
-.install-cmd{
-  display:inline-flex;align-items:center;gap:.75rem;
-  background:var(--surface);border:1px solid var(--border);
-  padding:.6rem 1rem;border-radius:8px;font-size:.875rem;
+.hero{
+  padding:14px 0 28px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:2rem;
 }
-.install-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-.install-cmd code{background:none;border:none;padding:0;font-family:var(--font-mono);color:var(--accent2)}
+.hero-eyebrow{
+  font-size:.7rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--accent);margin-bottom:.85rem;
+}
+.hero-title{
+  font-size:clamp(2rem,4vw,3.1rem);font-weight:700;
+  letter-spacing:-.01em;line-height:1.04;
+  color:var(--ink);margin-bottom:.45rem;
+}
+.hero-desc{
+  font-size:1.1rem;color:var(--text);
+  max-width:62ch;margin-bottom:1.5rem;line-height:1.55;
+}
+.hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--accent);border:1px solid var(--accent);
+  color:#fff;font-weight:600;padding:10px 18px;
+  border-radius:8px;font-size:.92rem;
+  transition:opacity .15s;
+}
+[data-theme=dark] .btn-primary{color:#0a0e16}
+.btn-primary:hover{opacity:.85;text-decoration:none}
+.btn-outline{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--line);color:var(--text);
+  padding:10px 18px;border-radius:8px;font-size:.92rem;font-weight:500;
+  transition:border-color .15s,color .15s;
+}
+.btn-outline:hover{border-color:var(--accent);color:var(--ink);text-decoration:none}
+.install-cmd{
+  display:inline-flex;align-items:center;gap:12px;
+  background:var(--code-bg);color:var(--code-fg);
+  border:1px solid var(--code-border);
+  padding:10px 10px 10px 16px;border-radius:8px;
+  font:500 .9rem/1.2 var(--font-mono);max-width:32em;
+}
+.install-cmd code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.install-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 
 /* ── Typography ─────────────────────────────────────── */
-.main h1{font-size:1.75rem;font-weight:800;letter-spacing:-.03em;margin-bottom:1rem}
-.main h2{font-size:1.25rem;font-weight:700;border-bottom:1px solid var(--border);padding-bottom:.4rem;margin:2.25rem 0 1rem;scroll-margin-top:72px}
-.main h3{font-size:1rem;font-weight:600;margin:1.75rem 0 .6rem;scroll-margin-top:72px}
-.main h4{font-size:.9rem;font-weight:600;color:var(--muted);margin:1.25rem 0 .5rem;scroll-margin-top:72px}
-.main p{margin-bottom:.9rem}
-.main ul,.main ol{padding-left:1.4rem;margin-bottom:.9rem}
+.main h1{font-size:2.5rem;font-weight:700;line-height:1.08;color:var(--ink);margin-bottom:1rem;letter-spacing:-.02em}
+.main h2{font-size:1.4rem;font-weight:600;line-height:1.2;color:var(--ink);border-bottom:1px solid var(--line);padding-bottom:.4rem;margin:2.5rem 0 1rem;scroll-margin-top:24px}
+.main h3{font-size:1.08rem;font-weight:600;color:var(--ink);margin:2rem 0 .6rem;scroll-margin-top:24px}
+.main h4{font-size:.96rem;font-weight:600;color:var(--muted);margin:1.5rem 0 .5rem;scroll-margin-top:24px}
+.main p{margin-bottom:1.05em}
+.main ul,.main ol{padding-left:1.4rem;margin-bottom:1em}
 .main li{margin-bottom:.3rem}
-.main blockquote{border-left:3px solid var(--accent);padding:.5rem 1rem;background:var(--surface);border-radius:0 6px 6px 0;margin:1rem 0;color:var(--muted)}
-.anchor{opacity:0;font-size:.85em;color:var(--muted);margin-right:.4rem;text-decoration:none}
+.main blockquote{
+  border-left:3px solid var(--accent);background:var(--accent-soft);
+  padding:10px 16px;border-radius:0 8px 8px 0;margin:1.4em 0;color:var(--text);
+}
+.anchor{opacity:0;font-size:.8em;color:var(--muted);margin-right:.4rem;text-decoration:none}
 h2:hover .anchor,h3:hover .anchor{opacity:1}
 
 /* ── Inline code ────────────────────────────────────── */
 code{
-  background:var(--code-bg);border:1px solid var(--border);
-  padding:.15em .45em;border-radius:4px;
-  font-family:var(--font-mono);font-size:.875em;
+  background:var(--surface2);border-radius:5px;
+  padding:.15em .4em;font-family:var(--font-mono);font-size:.84em;
 }
 
 /* ── Code blocks ────────────────────────────────────── */
-.code-wrap{position:relative;margin:1rem 0}
-.code-lang{
-  position:absolute;top:.5rem;left:1rem;
-  font-family:var(--font-mono);font-size:.7rem;
-  color:var(--muted);text-transform:lowercase;letter-spacing:.04em;
-  pointer-events:none;
-}
+.code-wrap{position:relative;margin:1.25rem 0}
 pre{
-  background:var(--code-bg);border:1px solid var(--border);
-  border-radius:8px;padding:1.25rem 1.25rem 1.25rem 1.25rem;
-  overflow-x:auto;font-family:var(--font-mono);font-size:.85rem;line-height:1.65;
+  background:var(--code-bg);border:1px solid var(--code-border);
+  border-radius:8px;padding:14px 18px;
+  overflow-x:auto;font-family:var(--font-mono);font-size:.85rem;line-height:1.6;
+  color:var(--code-fg);
+  scrollbar-width:thin;scrollbar-color:#334155 transparent;
 }
-pre code{background:none;border:none;padding:0;font-size:inherit}
+pre code{background:none;border:none;padding:0;font-size:inherit;color:inherit}
 .copy-btn{
   position:absolute;top:.5rem;right:.5rem;
-  background:var(--surface2);border:1px solid var(--border);
-  color:var(--muted);font-size:.72rem;padding:.22rem .55rem;border-radius:4px;
-  cursor:pointer;font-family:var(--font-sans);transition:color .12s,border-color .12s;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  color:#8d96a4;font-size:.72rem;padding:5px 11px;border-radius:6px;
+  cursor:pointer;font:500 .72rem/1 var(--font-sans);
+  transition:background .12s,color .12s;
 }
-.copy-btn:hover{color:var(--text);border-color:var(--accent)}
-.copy-btn.ok{color:var(--accent2);border-color:var(--accent2)}
+.copy-btn:hover{background:rgba(255,255,255,.16);color:#e6edf3}
+.copy-btn.ok{background:var(--accent);border-color:var(--accent);color:#0a0e16}
 
 /* ── Syntax highlight tokens ────────────────────────── */
-.hk{color:#ff7b72}  /* keyword / command */
-.hs{color:#a5d6ff}  /* string */
-.hn{color:#79c0ff}  /* number */
-.hc{color:#8b949e;font-style:italic} /* comment */
-.hf{color:#ffa657}  /* flag */
-[data-theme=light] .hk{color:#cf222e}
-[data-theme=light] .hs{color:#0a3069}
-[data-theme=light] .hn{color:#0550ae}
-[data-theme=light] .hc{color:#6e7781}
-[data-theme=light] .hf{color:#953800}
+.hk{color:#e387cb}
+.hs{color:#a8e0a3}
+.hn{color:#f6c177}
+.hc{color:#7c8597;font-style:italic}
+.hf{color:#fcd28a}
 
 /* ── Tables ─────────────────────────────────────────── */
 table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.9rem}
-th{background:var(--surface);text-align:left;padding:.5rem .85rem;border:1px solid var(--border);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-td{padding:.5rem .85rem;border:1px solid var(--border);vertical-align:top}
+th{
+  background:var(--line-soft);text-align:left;
+  padding:9px 10px;border-bottom:1px solid var(--line);
+  font-size:.8rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--muted);
+}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 td code{font-size:.8em}
 
 /* ── Responsive ─────────────────────────────────────── */
-@media(max-width:1100px){.toc{display:none}}
-@media(max-width:768px){
-  .layout{padding:0}
+@media(max-width:1200px){.toc{display:none}}
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
   .sidebar{
-    position:fixed;top:56px;left:0;height:calc(100vh - 56px);z-index:90;
+    position:fixed;top:0;left:0;z-index:200;
+    height:100vh;width:var(--sidebar-w);
     transform:translateX(-100%);transition:transform .22s ease;
-    background:var(--bg);border-right:1px solid var(--border);
   }
   .sidebar.open{transform:translateX(0)}
-  .topnav .hamburger{display:flex}
-  .main{padding:1.5rem 1rem 3rem}
+  .mob-bar{display:flex}
+  .main{padding:20px 18px 56px}
 }
 </style>
 </head>
 <body>
-
-<!-- top nav -->
-<header class="topnav">
-  <button class="hamburger" id="ham" aria-label="Toggle menu">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-      <line x1="3" y1="6"  x2="17" y2="6"/>
-      <line x1="3" y1="10" x2="17" y2="10"/>
-      <line x1="3" y1="14" x2="17" y2="14"/>
-    </svg>
-  </button>
-  <a class="nav-brand" href="index.html"><span>${TOOL}</span></a>
-  <div class="spacer"></div>
-  <a class="nav-link" href="${REPO_URL}" target="_blank" rel="noopener">GitHub ↗</a>
-  <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
-    <span class="icon-sun">☀️</span>
-    <span class="icon-moon">🌙</span>
-    <span id="themeLabel">Light</span>
-  </button>
-</header>
-
-<!-- layout -->
-<div class="layout">
+<div class="shell">
   ${sidebar}
-  <main class="main">
-    ${hero}
-    ${bodyHtml}
-  </main>
-  ${tocBlock}
+  <div class="body-col">
+    <div class="mob-bar">
+      <button class="hamburger" id="ham" aria-label="Toggle menu">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6"  x2="17" y2="6"/>
+          <line x1="3" y1="10" x2="17" y2="10"/>
+          <line x1="3" y1="14" x2="17" y2="14"/>
+        </svg>
+      </button>
+      <a class="mob-brand" href="index.html">${TOOL}</a>
+    </div>
+    <div class="content-row">
+      <main class="main">
+        ${hero}
+        ${bodyHtml}
+      </main>
+      ${tocBlock}
+    </div>
+  </div>
 </div>
 
 <script>
@@ -546,7 +684,7 @@ if(tocLinks.length){
         if(a)a.classList.add("active");
       }
     });
-  },{rootMargin:"-56px 0px -70% 0px"});
+  },{rootMargin:"0px 0px -70% 0px"});
   heads.forEach(h=>obs.observe(h));
 }
 </script>
@@ -554,31 +692,39 @@ if(tocLinks.length){
 </html>`;
 }
 
-// ── Build ─────────────────────────────────────────────────────────────────────
+// ── Navigation ────────────────────────────────────────────────────────────────
 
-const mdFiles = readdirSync(SRC)
-  .filter(f => extname(f) === ".md")
-  .sort((a,b) => {
-    if(a==="index.md") return -1;
-    if(b==="index.md") return 1;
-    return a.localeCompare(b);
-  });
+const sections = [
+  ["Get Started", ["index.md", "install.md", "quickstart.md"]],
+  ["Reference",   ["reference.md"]],
+];
+
+const LABELS = {
+  "index":      "Home",
+  "quickstart": "Quick Start",
+};
 
 function fileToLabel(filename) {
-  return basename(filename,".md")
-    .replace(/-/g," ")
-    .replace(/\b\w/g,c=>c.toUpperCase())
-    .replace(/^Index$/,"Home");
+  const slug = basename(filename, ".md");
+  if (LABELS[slug]) return LABELS[slug];
+  return slug
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-const pages = mdFiles.map(f => ({
-  slug:  basename(f,".md"),
-  label: fileToLabel(f),
-  file:  f,
-}));
+const pages = sections.flatMap(([, files]) =>
+  files.map(f => ({ slug: basename(f, ".md"), label: fileToLabel(f), file: f }))
+);
+
+// ── Build ─────────────────────────────────────────────────────────────────────
 
 for(const {slug,label,file} of pages) {
-  const src    = readFileSync(join(SRC,file),"utf8");
+  const filePath = join(SRC, file);
+  if (!existsSync(filePath)) {
+    console.error(`  ERROR: docs/${file} not found — check sections array`);
+    process.exit(1);
+  }
+  const src    = readFileSync(filePath,"utf8");
   const {html,toc} = parse(src);
   const output = renderPage({
     slug, title:label, bodyHtml:html, toc, pages,
@@ -595,7 +741,7 @@ writeFileSync(join(OUT,".nojekyll"),"");
 if(existsSync(join(SRC,"CNAME")))
   writeFileSync(join(OUT,"CNAME"),readFileSync(join(SRC,"CNAME")));
 
-// llms.txt — AI-readable metadata
+// llms.txt
 writeFileSync(join(OUT,"llms.txt"),
 `# ${TOOL}
 

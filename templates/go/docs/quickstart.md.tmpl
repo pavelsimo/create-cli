@@ -1,0 +1,45 @@
+---
+title: Quick Start
+description: Get productive with {{TOOL_NAME}} in 60 seconds
+---
+
+## Show help
+
+```bash
+{{TOOL_NAME}} --help
+```
+
+## Check version
+
+```bash
+{{TOOL_NAME}} version
+```
+
+## JSON output
+
+Every command supports `--json` for scripting:
+
+```bash
+{{TOOL_NAME}} <subcommand> --json | jq '.'
+```
+
+## Dry run
+
+Preview changes before applying them:
+
+```bash
+{{TOOL_NAME}} <subcommand> --dry-run
+```
+
+## Shell completions
+
+```bash
+# bash
+{{TOOL_NAME}} completion bash > /etc/bash_completion.d/{{TOOL_NAME}}
+
+# zsh
+{{TOOL_NAME}} completion zsh > "${fpath[1]}/_{{TOOL_NAME}}"
+
+# fish
+{{TOOL_NAME}} completion fish > ~/.config/fish/completions/{{TOOL_NAME}}.fish
+```
