@@ -49,66 +49,9 @@ The skill asks for a name and description, shows you a CLI design spec to review
 
 ## Installation
 
-<details>
-<summary>Claude Code</summary>
-
-Claude Code supports custom slash commands defined as Markdown files under `.claude/commands/`. Dropping `SKILL.md` there registers a `/create-cli` command in any Claude Code session inside that project.
-
 ```bash
-mkdir -p .claude/commands
-cp SKILL.md .claude/commands/create-cli.md
+npx skills@latest add pavelsimo/create-cli
 ```
-
-For a global install (available in every project):
-
-```bash
-mkdir -p ~/.claude/commands
-cp SKILL.md ~/.claude/commands/create-cli.md
-```
-
-**invoke:** type `/create-cli` in Claude Code (CLI, VS Code extension, or web).
-
-</details>
-
-<details>
-<summary>OpenAI Codex</summary>
-
-Codex reads `AGENTS.md` at the project root as a persistent instruction file. Reference `SKILL.md` from there so Codex follows the scaffold conventions when you ask it to create a CLI.
-
-```bash
-cp SKILL.md SKILL.md   # keep the skill file in your repo root
-```
-
-Then add to `AGENTS.md`:
-
-```markdown
-## create-cli
-when scaffolding a new Go CLI project, follow the rules defined in SKILL.md exactly.
-```
-
-For a global install, append the skill to your user-level instructions:
-
-```bash
-cat SKILL.md >> ~/.codex/instructions.md
-```
-
-**invoke:** `codex "create a new CLI called my-tool"` or ask inside a session.
-
-</details>
-
-<details>
-<summary>GitHub Copilot</summary>
-
-Copilot Chat picks up repository-level custom instructions from `.github/copilot-instructions.md`. Paste the skill content there so Copilot follows the same conventions.
-
-```bash
-mkdir -p .github
-cat SKILL.md >> .github/copilot-instructions.md
-```
-
-**invoke:** open Copilot Chat and say `scaffold a new Go CLI project called my-tool`.
-
-</details>
 
 ## Attribution
 
