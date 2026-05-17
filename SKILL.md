@@ -1,6 +1,6 @@
 ---
 name: create-cli
-description: "Scaffold production-ready CLI projects from language templates. Currently: go (Cobra, CI/CD, goreleaser, GitHub Pages)."
+description: Scaffolds production-ready CLI projects from language templates, currently supporting Go with Cobra, Makefile, golangci-lint, goreleaser, and GitHub Pages docs. Use when the user wants to bootstrap a new command-line tool project from scratch.
 trigger: /create-cli
 ---
 
